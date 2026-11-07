@@ -1,9 +1,12 @@
 import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { hashPassword } from './auth.js';
 
-export const DATA_DIR = path.resolve(process.env.DATA_DIR || 'data');
+// Mặc định: thư mục data nằm cạnh mã nguồn (không phụ thuộc thư mục đang đứng khi chạy)
+export const APP_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+export const DATA_DIR = path.resolve(APP_DIR, process.env.DATA_DIR || 'data');
 export const DB_PATH = path.join(DATA_DIR, 'qltb.db');
 export const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 

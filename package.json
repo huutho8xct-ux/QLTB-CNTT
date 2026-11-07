@@ -13,7 +13,8 @@
     "dev": "node --disable-warning=ExperimentalWarning --watch server.js",
     "seed:demo": "node --disable-warning=ExperimentalWarning scripts/seed-demo.js",
     "reset-admin": "node --disable-warning=ExperimentalWarning scripts/reset-admin.js",
-    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js"
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js",
+    "build:windows": "node scripts/build-windows.js"
   },
   "license": "MIT",
   "dependencies": {

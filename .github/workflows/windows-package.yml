@@ -1,0 +1,79 @@
+name: Dong goi va kiem thu ban cai dat Windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+    branches: ['**']
+    paths:
+      - 'windows/**'
+      - '*.bat'
+      - 'scripts/build-windows.js'
+      - 'server.js'
+      - '.github/workflows/windows-package.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm test
+
+      - name: Kiem tra cu phap PowerShell
+        shell: powershell
+        run: |
+          $errs = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("$PWD\windows\service.ps1", [ref]$null, [ref]$errs) | Out-Null
+          if ($errs) { $errs | ForEach-Object { Write-Host "$($_.Extent.StartLineNumber): $($_.Message)" }; exit 1 }
+
+      - name: Dong goi ban offline (zip, kem Node.js)
+        run: node scripts/build-windows.js
+
+      - name: Tao Setup.exe bang Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = (Get-Command iscc.exe -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          $ver = node -p "require('./package.json').version"
+          & $iscc "/DAppVersion=$ver" windows\setup.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Kiem thu cai dat bang script (ban zip)
+        shell: powershell
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File dist\QLTB-CNTT\windows\service.ps1 -Action install -InstallDir C:\QLTB-CNTT -Port 3000
+          if ($LASTEXITCODE -ne 0) { Get-Content C:\QLTB-CNTT\data\logs\* -ErrorAction SilentlyContinue; exit 1 }
+          (Invoke-WebRequest http://localhost:3000/api/health -UseBasicParsing).Content
+          Get-ScheduledTask -TaskName QLTB-CNTT | Format-List TaskName, State
+          powershell -NoProfile -ExecutionPolicy Bypass -File C:\QLTB-CNTT\windows\service.ps1 -Action restart
+          (Invoke-WebRequest http://localhost:3000/api/health -UseBasicParsing).Content
+          powershell -NoProfile -ExecutionPolicy Bypass -File C:\QLTB-CNTT\windows\service.ps1 -Action status
+          powershell -NoProfile -ExecutionPolicy Bypass -File C:\QLTB-CNTT\windows\service.ps1 -Action uninstall
+          Start-Sleep 2
+          if (Get-ScheduledTask -TaskName QLTB-CNTT -ErrorAction SilentlyContinue) { Write-Host 'Go cai dat chua xoa dich vu'; exit 1 }
+          Get-Content C:\QLTB-CNTT\data\logs\server.log -Tail 20
+
+      - name: Kiem thu Setup.exe (cai im lang, truy cap, go bo)
+        shell: powershell
+        run: |
+          $setup = Get-ChildItem dist\QLTB-CNTT-Setup-*.exe | Select-Object -First 1
+          Start-Process $setup.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/DIR=C:\QLTB-SETUP' -Wait
+          $ok = $false
+          for ($i = 0; $i -lt 30 -and -not $ok; $i++) { try { $ok = (Invoke-WebRequest http://localhost:3000/api/health -UseBasicParsing -TimeoutSec 3).StatusCode -eq 200 } catch { Start-Sleep 1 } }
+          if (-not $ok) { Get-Content C:\QLTB-SETUP\data\logs\* -ErrorAction SilentlyContinue; exit 1 }
+          Write-Host 'Setup.exe: phan mem chay thanh cong'
+          Start-Process C:\QLTB-SETUP\unins000.exe -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES' -Wait
+          Start-Sleep 3
+          if (Get-ScheduledTask -TaskName QLTB-CNTT -ErrorAction SilentlyContinue) { Write-Host 'Go cai dat chua xoa dich vu'; exit 1 }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QLTB-CNTT-windows
+          path: |
+            dist/*.zip
+            dist/*.exe

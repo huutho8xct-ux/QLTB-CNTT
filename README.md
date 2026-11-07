@@ -58,13 +58,14 @@ Dữ liệu mẫu có thêm các tài khoản `quanly`, `kythuat`, `lanhdao`, `n
 
 ### Trên Windows
 
-Nhấp đúp `start.bat`. Để phần mềm tự chạy khi khởi động máy chủ, có thể dùng [NSSM](https://nssm.cc) cài thành Windows Service, hoặc dùng `pm2`:
+Xem hướng dẫn chi tiết tại **[HUONG-DAN-CAI-DAT-WINDOWS.md](HUONG-DAN-CAI-DAT-WINDOWS.md)**. Tóm tắt:
 
-```bash
-npm install -g pm2 pm2-windows-startup
-pm2 start server.js --name qltb --node-args="--disable-warning=ExperimentalWarning"
-pm2 save && pm2-startup install
-```
+- **`QLTB-CNTT-Setup-x.y.z.exe`**: trình cài đặt kèm sẵn Node.js, không cần Internet. Bấm Next → Install là xong.
+- **`QLTB-CNTT-x.y.z-windows-x64.zip`**: giải nén vào `C:\` rồi chạy **`CAI-DAT.bat`**.
+
+Sau khi cài, phần mềm chạy nền như dịch vụ (tự khởi động cùng Windows, tự chạy lại khi lỗi). Trình cài cũng mở tường lửa cho mạng nội bộ và tạo lối tắt trên Desktop. Công cụ **`QUAN-LY.bat`** dùng để khởi động, dừng, xem nhật ký, đổi cổng và đặt lại mật khẩu admin.
+
+Tạo bộ cài từ mã nguồn: `npm run build:windows` (gói zip) và `iscc windows\setup.iss` (Setup.exe). Có thể dùng quy trình GitHub Actions có sẵn để tự tạo cả hai tệp.
 
 ### Trên Linux (systemd)
 

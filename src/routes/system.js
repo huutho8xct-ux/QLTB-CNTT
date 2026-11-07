@@ -3,7 +3,7 @@ import express from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { all, get, run, getSettings, BACKUP_DIR } from '../db.js';
+import { all, get, run, getSettings, BACKUP_DIR, DB_PATH } from '../db.js';
 import { requirePerm } from '../auth.js';
 import { HttpError, audit, pageParams, likeParam } from '../util.js';
 import { createBackup, listBackups, restoreFrom, pruneBackups } from '../backup.js';
@@ -54,7 +54,7 @@ router.get('/system-info', requirePerm('backup'), (_req, res) => {
   for (const t of ['devices', 'users', 'allocations', 'repairs', 'maintenances', 'inventories', 'disposals', 'licenses', 'audit_logs', 'device_history']) {
     counts[t] = get(`SELECT COUNT(*) AS n FROM ${t}`).n;
   }
-  const dbFile = path.resolve(process.env.DATA_DIR || 'data', 'qltb.db');
+  const dbFile = DB_PATH;
   res.json({
     node: process.version, platform: `${os.type()} ${os.release()}`, hostname: os.hostname(), uptime: Math.round(process.uptime()),
     db_size: fs.existsSync(dbFile) ? fs.statSync(dbFile).size : 0, data_dir: path.dirname(dbFile), counts,
