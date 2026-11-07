@@ -1,0 +1,28 @@
+{
+  "name": "qltb-cntt",
+  "version": "1.0.0",
+  "description": "Phần mềm quản lý thiết bị công nghệ thông tin cho đơn vị sự nghiệp công lập",
+  "type": "module",
+  "main": "server.js",
+  "private": true,
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server.js",
+    "seed:demo": "node --disable-warning=ExperimentalWarning scripts/seed-demo.js",
+    "reset-admin": "node --disable-warning=ExperimentalWarning scripts/reset-admin.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "chart.js": "^4.6.1",
+    "exceljs": "^4.4.0",
+    "express": "^5.3.0",
+    "qrcode": "^1.5.4"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
+}
