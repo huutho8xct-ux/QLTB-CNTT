@@ -87,7 +87,7 @@ jobs:
             dist/*.exe
 
       - name: Tao ban phat hanh (Release) khi day the phien ban
-        if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
+        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag || github.ref_name }}
